@@ -7,6 +7,29 @@ import collections
 import numpy as np
 import math
 
+
+def boolean_retrieval(tokens):
+	if postings.has_key(tokens[0]):
+		result_set = set(postings[tokens[0]].keys())
+	else:
+		print "sorry, no match"
+		return
+
+	no_match = 0
+	for token in tokens:
+		try:
+			result_set &= set(postings[token].keys())
+		except KeyError:
+			result_set = set([])
+			no_match = 1
+			break
+
+	if (no_match == 1 or len(list(result_set)) == 0):
+		print "sorry, no match"
+	else:
+		for filename in list(result_set):
+			print re.findall(r"""([a-z0-9]+).txt""", filename, re.VERBOSE)[0]
+
 def get_vector(filename):
 	file_pointer = open(filename, 'r')
 	file_content = file_pointer.read()
@@ -32,10 +55,25 @@ def cosine_similarity(query_tf, tfidf_vector):
 	cosine = nr/(mod_document*mod_query)
 	return cosine
 
+
+def vector_retrieval(tokens):
+	filenames = []
+	for token in tokens:
+		query_tf[token] += 1
+		filenames.extend(postings[token].keys())
+	filenames = list(set(filenames))
+	for filename in filenames:
+		cosine_similarities[filename] =	cosine_similarity(flipped[filename], query_tf)
+	ranked_results = sorted(cosine_similarities.items(), key=lambda x: x[1], reverse=True)
+	for result in ranked_results[:50]:
+		print re.findall(r"""([a-z0-9]+).txt""", result[0], re.VERBOSE)[0], result[1]
+
 os.chdir("/home/littlecegian/inforetrieval/simple_search_engine/")
-postings = {}
+postings = collections.defaultdict(dict)
+flipped = collections.defaultdict(dict)
 idf_values = collections.defaultdict()
 query_tf = collections.defaultdict(int)
+cosine_similarities = collections.defaultdict(int)
 # nsf_award_abstracts
 start = time.time()
 output_filenames = []
@@ -57,7 +95,7 @@ for filename in glob.glob("nsf_award_abstracts/*/*/*.txt"):
     			postings[token][filename] = 1
     file_pointer.close()
 
-
+# print "document_count is " + str(document_count)
 end = time.time()
 
 print "index has been built successfully"
@@ -70,7 +108,12 @@ start = time.time()
 for key in postings.keys():
 	idf_values[key] = np.log10(document_count/len(postings[key]))
 	for doc_name in postings[key].keys():
-		postings[key][doc_name] *= idf_values[key]
+		postings[key][doc_name] = (1 + np.log10(postings[key][doc_name])) * (idf_values[key])
+
+for key, val in postings.items():
+    for subkey, subval in val.items():
+        flipped[subkey][key] = subval
+
 
 end = time.time()
 
@@ -79,41 +122,16 @@ print "time taken to do that is " + str(end - start) + " seconds"
 
 print "done"
 
+
 while(1):
 	print "Please enter a query"
 	query = raw_input().lower()
 	if (query == 'exit'):
 		break
+
 	tokens = re.findall('[a-z0-9]+', query)
-	# print tokens
-	if postings.has_key(tokens[0]):
-		result_set = set(postings[tokens[0]].keys())
-	else:
-		print "sorry, no match"
-		# result_set = set([])
-		continue
-
-	continue_var = 0
-	for token in tokens:
-		query_tf[token] += 1
-		try:
-			result_set &= set(postings[token].keys())
-		except KeyError:
-			print "sorry, no match"
-			result_set = set([])
-			continue_var = 1
-			continue
-
-	if (continue_var == 1):
-		continue
-	if(len(list(result_set)) == 0):
-		print "sorry, no match"
-	else:
-		# this means that all the tokens are present in certain documents. Now we have to find the cosine similarity
-		for filename in list(result_set):
-			tfidf_vector = get_vector(filename)
-			print re.findall(r"""([a-z0-9]+).txt""", filename, re.VERBOSE)[0], cosine_similarity(query_tf, tfidf_vector)
-			# output_filenames.append(re.findall(r"""([a-z0-9]+).txt""", filename, re.VERBOSE)[0])
-		# print len(output_filenames)
-		# for name in filenames:
-		# 	print name + cosine_similarity(query_tf, )
+	retrieval_mode = tokens.pop(0)
+	if(retrieval_mode == "bool"):
+		boolean_retrieval(tokens)
+	elif(retrieval_mode == "vector"):
+		vector_retrieval(tokens)
