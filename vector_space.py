@@ -8,6 +8,16 @@ import numpy as np
 import math
 
 
+# def get_vector(filename):
+# 	file_pointer = open(filename, 'r')
+# 	file_content = file_pointer.read()
+# 	tokens = re.findall('[a-z0-9]+', file_content.lower())
+# 	tfidf_vector = collections.defaultdict(int)
+# 	for token in tokens:
+# 		tfidf_vector[token] = postings[token][filename]
+# 	return tfidf_vector
+
+
 def boolean_retrieval(tokens):
 	if postings.has_key(tokens[0]):
 		result_set = set(postings[tokens[0]].keys())
@@ -15,29 +25,14 @@ def boolean_retrieval(tokens):
 		print "sorry, no match"
 		return
 
-	no_match = 0
 	for token in tokens:
-		try:
-			result_set &= set(postings[token].keys())
-		except KeyError:
-			result_set = set([])
-			no_match = 1
-			break
+		result_set &= set(postings[token].keys())
 
-	if (no_match == 1 or len(list(result_set)) == 0):
+	if (len(list(result_set)) == 0):
 		print "sorry, no match"
 	else:
 		for filename in list(result_set):
 			print re.findall(r"""([a-z0-9]+).txt""", filename, re.VERBOSE)[0]
-
-def get_vector(filename):
-	file_pointer = open(filename, 'r')
-	file_content = file_pointer.read()
-	tokens = re.findall('[a-z0-9]+', file_content.lower())
-	tfidf_vector = collections.defaultdict(int)
-	for token in tokens:
-		tfidf_vector[token] = postings[token][filename]
-	return tfidf_vector
 
 def cosine_similarity(query_tf, tfidf_vector):
 	nr = 0
@@ -58,41 +53,35 @@ def cosine_similarity(query_tf, tfidf_vector):
 
 def vector_retrieval(tokens):
 	filenames = []
+	cosine_similarities = collections.defaultdict(int)
+	query_tf = collections.defaultdict(int)
+	ranked_results = []
 	for token in tokens:
 		query_tf[token] += 1
 		filenames.extend(postings[token].keys())
 	filenames = list(set(filenames))
 	for filename in filenames:
-		cosine_similarities[filename] =	cosine_similarity(flipped[filename], query_tf)
+		cosine_similarities[filename] =	cosine_similarity(query_tf, flipped[filename])
 	ranked_results = sorted(cosine_similarities.items(), key=lambda x: x[1], reverse=True)
 	for result in ranked_results[:50]:
 		print re.findall(r"""([a-z0-9]+).txt""", result[0], re.VERBOSE)[0], result[1]
 
-os.chdir("/home/littlecegian/inforetrieval/simple_search_engine/")
-postings = collections.defaultdict(dict)
-flipped = collections.defaultdict(dict)
-idf_values = collections.defaultdict()
-query_tf = collections.defaultdict(int)
-cosine_similarities = collections.defaultdict(int)
-# nsf_award_abstracts
+os.chdir("./")
+postings = collections.defaultdict(lambda: collections.defaultdict(int))
+flipped = collections.defaultdict(lambda: collections.defaultdict(int))
+idf_values = collections.defaultdict(int)
 start = time.time()
 output_filenames = []
 document_count = 0
 
+print "building index . . . . . . ."
 for filename in glob.glob("nsf_award_abstracts/*/*/*.txt"):
     file_pointer = open(filename, 'r')
     file_content = file_pointer.read()
     document_count += 1
     tokens = re.findall('[a-z0-9]+', file_content.lower())
     for token in tokens:
-    	try:
-    		postings[token][filename] += 1
-    	except KeyError:
-    		if postings.has_key(token):
-    			postings[token][filename] = 1
-    		else:
-    			postings[token] = {}
-    			postings[token][filename] = 1
+    	postings[token][filename] += 1
     file_pointer.close()
 
 # print "document_count is " + str(document_count)
@@ -106,9 +95,11 @@ print "computing idf for each term . . . . . . ."
 start = time.time()
 
 for key in postings.keys():
-	idf_values[key] = np.log10(document_count/len(postings[key]))
+	idf_values[key] = math.log(document_count/len(postings[key]))/math.log(10)
 	for doc_name in postings[key].keys():
-		postings[key][doc_name] = (1 + np.log10(postings[key][doc_name])) * (idf_values[key])
+		postings[key][doc_name] = (1 + (math.log(postings[key][doc_name]) / math.log(10))) * (idf_values[key])
+
+print "creating a tf-idf vector for all documents . . . . . . ."
 
 for key, val in postings.items():
     for subkey, subval in val.items():
@@ -118,10 +109,7 @@ for key, val in postings.items():
 end = time.time()
 
 print "tf-idf has been updated for each word in each document"
-print "time taken to do that is " + str(end - start) + " seconds"
-
-print "done"
-
+print "time taken is " + str(end - start) + " seconds"
 
 while(1):
 	print "Please enter a query"
