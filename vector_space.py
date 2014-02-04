@@ -75,7 +75,7 @@ output_filenames = []
 document_count = 0
 
 print "building index . . . . . . ."
-for filename in glob.glob("nsf_award_abstracts/*/*/*.txt"):
+for filename in glob.glob("nsf award abstracts/*/*/*.txt"):
     file_pointer = open(filename, 'r')
     file_content = file_pointer.read()
     document_count += 1
