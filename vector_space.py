@@ -125,6 +125,9 @@ while(1):
 		break
 
 	tokens = re.findall('[a-z0-9]+', query)
+	if(len(tokens) <= 1):
+		print "Invalid Query Term. Try again."
+		continue
 	retrieval_mode = tokens.pop(0)
 	if(len(tokens) == 0):
 		continue
