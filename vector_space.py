@@ -31,8 +31,10 @@ def boolean_retrieval(tokens):
 	if (len(list(result_set)) == 0):
 		print "sorry, no match"
 	else:
+		strin = ""
 		for filename in list(result_set):
-			print re.findall(r"""([a-z0-9]+).txt""", filename, re.VERBOSE)[0]
+			strin += re.findall(r"""([a-z0-9]+).txt""", filename, re.VERBOSE)[0] + " "
+		print strin
 
 def cosine_similarity(query_tf, tfidf_vector):
 	nr = 0
@@ -56,15 +58,20 @@ def vector_retrieval(tokens):
 	cosine_similarities = collections.defaultdict(int)
 	query_tf = collections.defaultdict(int)
 	ranked_results = []
+	all_tokens = postings.keys()
 	for token in tokens:
 		query_tf[token] += 1
-		filenames.extend(postings[token].keys())
+		if token in all_tokens:
+			filenames.extend(postings[token].keys())
+		else:
+			print "sorry, no match"
+			return
 	filenames = list(set(filenames))
 	for filename in filenames:
 		cosine_similarities[filename] =	cosine_similarity(query_tf, flipped[filename])
 	ranked_results = sorted(cosine_similarities.items(), key=lambda x: x[1], reverse=True)
 	for result in ranked_results[:50]:
-		print re.findall(r"""([a-z0-9]+).txt""", result[0], re.VERBOSE)[0], result[1]
+		print re.findall(r"""([a-z0-9]+).txt""", result[0], re.VERBOSE)[0], "["+str(result[1])+"]"
 
 os.chdir("./")
 postings = collections.defaultdict(lambda: collections.defaultdict(int))
@@ -112,13 +119,15 @@ print "tf-idf has been updated for each word in each document"
 print "time taken is " + str(end - start) + " seconds"
 
 while(1):
-	print "Please enter a query"
+	print "\n\nPlease enter a query of the format <bool/vector> <term1> <term2> . . . "
 	query = raw_input().lower()
-	if (query == 'exit'):
+	if (query.strip() == 'exit'):
 		break
 
 	tokens = re.findall('[a-z0-9]+', query)
 	retrieval_mode = tokens.pop(0)
+	if(len(tokens) == 0):
+		continue
 	if(retrieval_mode == "bool"):
 		boolean_retrieval(tokens)
 	elif(retrieval_mode == "vector"):
