@@ -71,7 +71,7 @@ def vector_retrieval(tokens):
 		cosine_similarities[filename] =	cosine_similarity(query_tf, flipped[filename])
 	ranked_results = sorted(cosine_similarities.items(), key=lambda x: x[1], reverse=True)
 	for result in ranked_results[:50]:
-		print re.findall(r"""([a-z0-9]+).txt""", result[0], re.VERBOSE)[0], "["+str(result[1])+"]"
+		print re.findall(r"""([a-z0-9]+).txt""", result[0], re.VERBOSE)[0], "["+str(round(result[1], 4))+"]"
 
 os.chdir("./")
 postings = collections.defaultdict(lambda: collections.defaultdict(int))
@@ -102,9 +102,9 @@ print "computing idf for each term . . . . . . ."
 start = time.time()
 
 for key in postings.keys():
-	idf_values[key] = math.log(document_count/len(postings[key]))/math.log(10)
+	idf_values[key] = math.log(1.0*document_count/len(postings[key]))/math.log(10)
 	for doc_name in postings[key].keys():
-		postings[key][doc_name] = (1 + (math.log(postings[key][doc_name]) / math.log(10))) * (idf_values[key])
+		postings[key][doc_name] = (1 + (math.log(1.0*postings[key][doc_name]) / math.log(10))) * (idf_values[key])
 
 print "creating a tf-idf vector for all documents . . . . . . ."
 

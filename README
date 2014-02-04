@@ -1,0 +1,38 @@
+Simple Search Engine
+
+Simple search engine based on Boolean Retrieval and Vector Space Retrieval.
+
+filename - vector_space.py
+
+Place the file in the parent folder of the "nsf award abstracts"
+
+Run the file as 
+
+python vector_space.py
+
+Initial Index will be created for about 25 seconds.
+
+TF IDF calculation and construction of tfidf vectors for all files will happen in another 55 seconds.
+
+After this, query prompt will open up.
+
+query structure is "<bool/vector> query"
+
+bool searches in boolean way, while option "vector" computes cosine similarity for all documents, ranks them and prints the top 50 results.
+
+Example queries
+
+1) bool stephen palumbi
+
+2) vector ricardo osuna
+
+
+To exit, 
+
+type "exit". Note - If you type "bool exit", the application will search for keyword exit.
+
+The time noted has been in my personal machine. (8GB Ram, CORE i5)
+
+In Sun machines, it takes considerably and variably longer time. The total index time varied from 8 minutes to 14 minutes in sun machine.
+
+ 
