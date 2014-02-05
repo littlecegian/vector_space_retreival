@@ -71,7 +71,7 @@ def vector_retrieval(tokens):
 		cosine_similarities[filename] =	cosine_similarity(query_tf, flipped[filename])
 	ranked_results = sorted(cosine_similarities.items(), key=lambda x: x[1], reverse=True)
 	for result in ranked_results[:50]:
-		print re.findall(r"""([a-z0-9]+).txt""", result[0], re.VERBOSE)[0], "["+str(round(result[1], 4))+"]"
+		print re.findall(r"""([a-z0-9]+).txt""", result[0], re.VERBOSE)[0], "["+str(result[1])+"]"
 
 os.chdir("./")
 postings = collections.defaultdict(lambda: collections.defaultdict(int))

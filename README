@@ -4,7 +4,7 @@ Simple search engine based on Boolean Retrieval and Vector Space Retrieval.
 
 filename - simple_search_engine.py
 
-Place the file in the parent folder of the "nsf award abstracts". ie., the "nsf award abstracts" folder has to be a sibling to simple_search_engine.py
+The corpus has not been uploaded due to size constraints. Place the corpus to be indexed ("nsf award abstracts" in our case) in the same folder as the python file and continue.
 
 Run the file as 
 
@@ -38,6 +38,9 @@ The time noted has been in my personal machine. (8GB Ram, CORE i5)
 In Sun machines, it takes considerably and variably longer time. The total index time varied from 8 minutes to 14 minutes in sun machine.
 
 
-Related Notes - The Cosine value has been outputted as a 4 digit precision float value. Although, the ranking was done on the original value.
+Resources Used - 
 
- 
+"glob" - from piazza
+"log(1.0*N/df)" - from piazza
+python documentation
+stackoverflow
